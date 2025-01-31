@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -19,11 +21,33 @@ func main() {
 
 func getAppReviews(c *gin.Context) {
 	id := c.Param("id")
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": id})
+	data := getReviewsFromFile()
+	if len(data) == 0 {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": id})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, data)
 }
 func getApps(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No apps have been found"})
 }
 func health(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "OK"})
+}
+
+func getReviewsFromFile() []map[string]interface{} {
+	file, _ := os.Open("./dbfile.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+
+	decoder.Token()
+
+	reviews := []map[string]interface{}{}
+	data := map[string]interface{}{}
+
+	for decoder.More() {
+		decoder.Decode(&data)
+		reviews = append(reviews, data)
+	}
+	return reviews
 }

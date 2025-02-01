@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app_store_reviewer/cron"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -8,6 +9,8 @@ import (
 )
 
 func main() {
+	cron.Run()
+	
 	router := gin.Default()
 	router.GET("/apps", getApps)
 	router.GET("/apps/:id/reviews", getAppReviews)
@@ -37,16 +40,27 @@ func health(c *gin.Context) {
 
 func getReviewsFromFile() []map[string]interface{} {
 	file, _ := os.Open("./dbfile.json")
-	defer file.Close()
+
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
 	decoder := json.NewDecoder(file)
 
-	decoder.Token()
+	_, err := decoder.Token()
+	if err != nil {
+		return nil
+	}
+	var reviews []map[string]interface{}
 
-	reviews := []map[string]interface{}{}
 	data := map[string]interface{}{}
-
 	for decoder.More() {
-		decoder.Decode(&data)
+		err := decoder.Decode(&data)
+		if err != nil {
+			return nil
+		}
 		reviews = append(reviews, data)
 	}
 	return reviews

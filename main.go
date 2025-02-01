@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
+
 	cron.Run()
-	
 	router := gin.Default()
 	router.GET("/apps", getApps)
 	router.GET("/apps/:id/reviews", getAppReviews)

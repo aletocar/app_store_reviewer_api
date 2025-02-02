@@ -32,6 +32,7 @@ type Entry struct {
 	ImVoteSum     FeedLabel `json:"im:voteSum"`
 	ImContentType Attribute `json:"im:contentType"`
 	ImVoteCount   FeedLabel `json:"im:voteCount"`
+	Content       Content   `json:"content"`
 }
 
 type FeedLabel struct {

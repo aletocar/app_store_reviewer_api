@@ -2,8 +2,10 @@ package main
 
 import (
 	"app_store_reviewer/cron"
+	"app_store_reviewer/utils"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
 	"os"
 )
@@ -24,7 +26,7 @@ func main() {
 
 func getAppReviews(c *gin.Context) {
 	id := c.Param("id")
-	data := getReviewsFromFile()
+	data := getReviewsForAppId(id)
 	if len(data) == 0 {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": id})
 		return
@@ -38,30 +40,19 @@ func health(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "OK"})
 }
 
-func getReviewsFromFile() []map[string]interface{} {
-	file, _ := os.Open("./dbfile.json")
-
+func getReviewsForAppId(id string) []utils.AppReview {
+	file, _ := os.Open("./reviews_" + id + ".json")
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
 
 		}
 	}(file)
-	decoder := json.NewDecoder(file)
-
-	_, err := decoder.Token()
+	var reviews utils.ReviewFile
+	byteValue, _ := io.ReadAll(file)
+	err := json.Unmarshal(byteValue, &reviews)
 	if err != nil {
 		return nil
 	}
-	var reviews []map[string]interface{}
-
-	data := map[string]interface{}{}
-	for decoder.More() {
-		err := decoder.Decode(&data)
-		if err != nil {
-			return nil
-		}
-		reviews = append(reviews, data)
-	}
-	return reviews
+	return reviews.Reviews
 }

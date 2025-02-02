@@ -8,7 +8,8 @@ import (
 func Run() {
 	println("Setting up Cron")
 	c := cron.New()
-	_, err := c.AddFunc("@every 10s", getReviews)
+	_, err := c.AddFunc("@every 60s", getReviews)
+	getReviews()
 	if err != nil {
 		return
 	}

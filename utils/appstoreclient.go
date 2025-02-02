@@ -49,7 +49,7 @@ func ParseEntriesToReviews(feed Feed) []AppReview {
 	var reviews []AppReview
 	for _, element := range feed.Entry {
 		var review AppReview
-		review.Author = element.Author.Label
+		review.Author = element.Author.Name.Label
 		review.Rating = element.ImRating.Label
 		review.Content = element.Content.Label
 		review.Id = element.Id.Label

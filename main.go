@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
 
 func main() {
@@ -26,7 +28,12 @@ func main() {
 
 func getAppReviews(c *gin.Context) {
 	id := c.Param("id")
-	data := getReviewsForAppId(id)
+	days := c.Query("days")
+	if days == "" {
+		days = "2" //default to 48 hours
+	}
+	val, _ := strconv.Atoi(days)
+	data := getReviewsForAppId(id, val)
 	if len(data) == 0 {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": id})
 		return
@@ -40,7 +47,7 @@ func health(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "OK"})
 }
 
-func getReviewsForAppId(id string) []utils.AppReview {
+func getReviewsForAppId(id string, days int) []utils.AppReview {
 	file, _ := os.Open("./reviews_" + id + ".json")
 	defer func(file *os.File) {
 		err := file.Close()
@@ -54,5 +61,17 @@ func getReviewsForAppId(id string) []utils.AppReview {
 	if err != nil {
 		return nil
 	}
-	return reviews.Reviews
+
+	return filterReviewsForTheLastDays(reviews.Reviews, days)
+}
+
+func filterReviewsForTheLastDays(reviews []utils.AppReview, days int) []utils.AppReview {
+	var filteredReviews []utils.AppReview
+	originalDate := time.Now().AddDate(0, 0, -days)
+	for _, review := range reviews {
+		if review.Updated.After(originalDate) {
+			filteredReviews = append(filteredReviews, review)
+		}
+	}
+	return filteredReviews
 }

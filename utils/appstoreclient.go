@@ -6,18 +6,19 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
-func GetReviewsForApp(appId string) {
+func getReviewsForAppAndPage(appId string, page int, lastPage int) ([]AppReview, int) {
+	url := fmt.Sprintf("https://itunes.apple.com/us/rss/customerreviews/id=%s/sortBy=mostRecent/page=%s/json", appId, strconv.Itoa(page))
 	client := &http.Client{}
-	url := fmt.Sprintf("https://itunes.apple.com/us/rss/customerreviews/id=%s/sortBy=mostRecent/page=1/json", appId)
 	resp, err := client.Get(url)
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
@@ -26,8 +27,31 @@ func GetReviewsForApp(appId string) {
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Printf("Cannot unmarshall json, %s\n", err)
 	}
+	lastPage = getLastPage(result.Feed.Link)
+	return ParseEntriesToReviews(result.Feed), lastPage
+}
 
-	reviews := ParseEntriesToReviews(result.Feed)
+func getLastPage(links []Link) int {
+	for _, link := range links {
+		if link.Attributes.Rel == "last" {
+			startIndex := len("https://itunes.apple.com/us/rss/customerreviews/page=")
+			lastString := string(link.Attributes.Href[startIndex:len(link.Attributes.Href)])
+			lastPage := strings.SplitAfter(lastString, "/")
+			lastPageInt, _ := strconv.Atoi(lastPage[0][0 : len(lastPage[0])-1])
+			return lastPageInt
+		}
+	}
+	return 0
+}
+
+func GetReviewsForApp(appId string) {
+	lastPage := 1
+	var reviews []AppReview
+	for i := 1; i <= lastPage; i++ {
+		var newReviews []AppReview
+		newReviews, lastPage = getReviewsForAppAndPage(appId, lastPage, lastPage)
+		reviews = append(reviews, newReviews...)
+	}
 	lastUpdatedReview := reviews[0].Updated
 	fmt.Printf("Last updated review: %s\n", lastUpdatedReview)
 	WriteFileWithReviews(reviews, appId, lastUpdatedReview)
@@ -54,12 +78,11 @@ func ParseEntriesToReviews(feed Feed) []AppReview {
 		review.Content = element.Content.Label
 		review.Id = element.Id.Label
 		review.Title = element.Title.Label
-		//2024-09-03T09:29:44-07:00
 		date, err := time.Parse(time.RFC3339Nano, element.Updated.Label)
 		if err != nil {
 			fmt.Printf("Cannot parse date, %s\n", err)
 		}
-		//Saving all reviews in UTC to better manage sorting afterwards.
+		//Saving all reviews in UTC to handle everything uniformly
 		review.Updated = date.UTC()
 		reviews = append(reviews, review)
 	}
@@ -67,8 +90,5 @@ func ParseEntriesToReviews(feed Feed) []AppReview {
 }
 
 /*
-
 	//TODO: 2. Handle pagination of the request.
-	//TODO: 3. Write the result to the file
-	//TODO: 4. keep the last time it was checked so as to only check until the last one is found
 */

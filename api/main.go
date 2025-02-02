@@ -41,7 +41,7 @@ func getAppReviews(c *gin.Context) {
 	val, _ := strconv.Atoi(days)
 	data := getReviewsForAppId(id, val)
 	if len(data) == 0 {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": id})
+		c.IndentedJSON(http.StatusOK, []string{})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, data)

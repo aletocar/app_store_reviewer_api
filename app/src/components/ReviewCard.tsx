@@ -22,10 +22,10 @@ export default function ReviewCard({ review }: ReviewCardProps) {
   return (
     <div className="p-4 border rounded-lg shadow-sm bg-white">
       <div className="flex justify-between items-start mb-2">
-        <div className="text-yellow-400">{'⭐'.repeat(parseInt(review.rating))}</div>
-        <span className="text-sm text-black">
-          {formatDate(review.updated)}
-        </span>
+        <div className="text-yellow-400">
+          {"⭐".repeat(parseInt(review.rating))}
+        </div>
+        <span className="text-sm text-black">{formatDate(review.updated)}</span>
       </div>
       <div className="mb-2">
         <span className="text-sm text-black">{review.author}</span>
@@ -43,10 +43,11 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         )}
       </p>
 
+{/* Added a modal to show review content that is larger than the card. */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="font-bold mb-4">{review.title}</h3>
+            <h3 className="font-bold text-black mb-4">{review.title}</h3>
             <p className="text-black mb-4">{review.content}</p>
             <button
               onClick={() => setIsModalOpen(false)}

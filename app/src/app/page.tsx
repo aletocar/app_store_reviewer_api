@@ -8,7 +8,7 @@ import { Review } from '@/types/reviews';
 export default function Home() {
   const [apps, setApps] = useState<string[]>([]);
   const [selectedApp, setSelectedApp] = useState('');
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(2);
   const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {

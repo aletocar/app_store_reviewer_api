@@ -2,6 +2,7 @@ package utils
 
 import "time"
 
+// Structs for the objects we will save in the json file.
 // review content, author, score, and time the review was submitted.
 
 type AppReview struct {

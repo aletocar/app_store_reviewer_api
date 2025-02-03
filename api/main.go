@@ -32,6 +32,8 @@ func main() {
 	}
 }
 
+// returns the reviews for an app id, if no reviews exist, returns an empty array
+// Due to the fact that not all apps have reviews for the last 48 hours, I added a Query Param to select how many days are queried.
 func getAppReviews(c *gin.Context) {
 	id := c.Param("id")
 	days := c.Query("days")
@@ -46,6 +48,8 @@ func getAppReviews(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, data)
 }
+
+// returns a list of apps that have available reviews
 func getApps(c *gin.Context) {
 	file, _ := os.Open("./applications.json")
 	defer func(file *os.File) {
@@ -62,10 +66,13 @@ func getApps(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, apps)
 }
+
+// default health check endpoint for the api.
 func health(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "OK"})
 }
 
+// opens the reviews file for a given id and filters the ones for the last days as provided in the params
 func getReviewsForAppId(id string, days int) []utils.AppReview {
 	file, _ := os.Open("./reviews_" + id + ".json")
 	defer func(file *os.File) {
@@ -80,10 +87,10 @@ func getReviewsForAppId(id string, days int) []utils.AppReview {
 	if err != nil {
 		return nil
 	}
-
 	return filterReviewsForTheLastDays(reviews.Reviews, days)
 }
 
+// filters the reviews for the given days.
 func filterReviewsForTheLastDays(reviews []utils.AppReview, days int) []utils.AppReview {
 	var filteredReviews []utils.AppReview
 	originalDate := time.Now().AddDate(0, 0, -days)

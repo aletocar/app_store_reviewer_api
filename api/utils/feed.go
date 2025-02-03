@@ -1,5 +1,9 @@
 package utils
 
+/*
+Structs to manage the response from itunes store api
+*/
+
 type Response struct {
 	Feed Feed `json:"feed"`
 }

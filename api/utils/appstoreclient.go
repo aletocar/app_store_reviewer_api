@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// makes the Get request to the itunes api and returns the list of reviews for that page, as well as the lastPage number.
 func getReviewsForAppAndPage(appId string, page int, lastPage int) ([]AppReview, int) {
 	url := fmt.Sprintf("https://itunes.apple.com/us/rss/customerreviews/id=%s/sortBy=mostRecent/page=%s/json", appId, strconv.Itoa(page))
 	client := &http.Client{}
@@ -31,6 +32,7 @@ func getReviewsForAppAndPage(appId string, page int, lastPage int) ([]AppReview,
 	return ParseEntriesToReviews(result.Feed), lastPage
 }
 
+// Get the last page of available reviews in the itunes store so that we can check if we finished paging through them.
 func getLastPage(links []Link) int {
 	for _, link := range links {
 		if link.Attributes.Rel == "last" {
@@ -44,6 +46,7 @@ func getLastPage(links []Link) int {
 	return 0
 }
 
+// Pages through all reviews available in the itunes api for an app id and writes the result to a file
 func GetReviewsForApp(appId string) {
 	lastPage := 1
 	var reviews []AppReview
@@ -52,11 +55,12 @@ func GetReviewsForApp(appId string) {
 		newReviews, lastPage = getReviewsForAppAndPage(appId, lastPage, lastPage)
 		reviews = append(reviews, newReviews...)
 	}
+	//Saving the last updated review as a separate field. This method could be optimized by filtering only the reviews that have been updated after the last updated review.
 	lastUpdatedReview := reviews[0].Updated
-	fmt.Printf("Last updated review: %s\n", lastUpdatedReview)
 	WriteFileWithReviews(reviews, appId, lastUpdatedReview)
 }
 
+// Write the file for the app reviews.
 func WriteFileWithReviews(reviews []AppReview, appId string, lastUpdated time.Time) {
 	var fileContent ReviewFile
 	fileContent.Reviews = reviews
@@ -67,8 +71,9 @@ func WriteFileWithReviews(reviews []AppReview, appId string, lastUpdated time.Ti
 	if err != nil {
 		fmt.Printf("Cannot write to file %s, %s\n", fileName, err)
 	}
-
 }
+
+// Converts the entries returned in the feed to the appreview object we will save to the file.
 func ParseEntriesToReviews(feed Feed) []AppReview {
 	var reviews []AppReview
 	for _, element := range feed.Entry {
@@ -88,7 +93,3 @@ func ParseEntriesToReviews(feed Feed) []AppReview {
 	}
 	return reviews
 }
-
-/*
-	//TODO: 2. Handle pagination of the request.
-*/
